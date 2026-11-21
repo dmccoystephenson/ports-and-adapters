@@ -145,6 +145,9 @@ def other_imports(text: str, lang: str, rel_file: PurePosixPath) -> list:
                 elif lang == "cpp":
                     found.append(("rel", os.path.normpath(str(rel_file.parent / spec)).replace(os.sep, "/")))
                     found.append(("rel", os.path.normpath(spec).replace(os.sep, "/")))
+                    # A project-rooted include ("src/billing/adapters/x.h") names the
+                    # subsystem before the layer, like an absolute import.
+                    found.append(("abs", os.path.normpath(spec).replace(os.sep, "/")))
                 elif lang == "rust" and pat.startswith(r"^\s*(?:pub\s+)?mod"):
                     found.append(("rel", str(rel_file.parent / spec)))
                 elif lang == "rust" and spec.split("::")[0] in ("super", "self"):

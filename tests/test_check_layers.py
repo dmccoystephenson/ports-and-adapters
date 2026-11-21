@@ -128,7 +128,8 @@ CASES = {
     },
     "cpp": {
         "good": {
-            "core.h": "#pragma once\n#include \"ports/clock.h\"\n#include <vector>\nnamespace billing { class Biller {}; }\n",
+            "core.h": "#pragma once\n#include \"ports/clock.h\"\n#include \"src/billing/ports/clock.h\"\n"
+                      "#include \"vendor/adapters/x.h\"\n#include <vector>\nnamespace billing { class Biller {}; }\n",
             "ports/clock.h": "#pragma once\nnamespace billing::ports {\nclass Clock {\npublic:\n"
                              "  virtual ~Clock() = default;\n  virtual long now() = 0;\n};\n}\n",
             "adapters/system_clock.h": "#pragma once\n#include \"../ports/clock.h\"\nclass Helper;\n"
@@ -140,6 +141,9 @@ CASES = {
         "bad_imports": [
             ("core.h", "#include \"adapters/system_clock.h\"\n"),
             ("ports/clock.h", "#include \"../service.h\"\nclass Clock {};\n"),
+            # Project-rooted includes (an -I at the source root) name the subsystem first.
+            ("core.h", "#include \"src/billing/adapters/system_clock.h\"\n"),
+            ("core.h", "#include \"billing/service.h\"\n"),
         ],
         "bad_types": ("adapters/system_clock.h", "namespace b {\nclass A {};\nstruct B {};\n}\n"),
         "comment_only": ("core.h", "// #include \"adapters/x.h\"\nconst char* s = \"#include \\\"service.h\\\"\";\n"),
