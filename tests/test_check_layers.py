@@ -196,6 +196,20 @@ class CheckLayersTests(unittest.TestCase):
         files = dict(CASES["python"]["good"], **{"core.py": "from otherlib.adapters import thing\n"})
         self.assertEqual(self.check("python", files), [])
 
+    def test_a_dotted_name_still_sees_outer_imports(self):
+        # --name may be written as it appears in imports (app.billing, crate::billing,
+        # com/acme/billing); each form must catch the same violation as the bare name.
+        root = self.build(dict(CASES["python"]["good"], **{"core.py": "from app.billing.adapters import x\n"}))
+        for name in ("billing", "app.billing", "app/billing", "app::billing", "App.Billing"):
+            with self.subTest(name=name):
+                problems = check_layers.violations(root, name)
+                self.assertTrue(any(p.startswith("core.py") and "imports" in p for p in problems), problems)
+
+    def test_a_dotted_name_must_match_whole_segments(self):
+        files = dict(CASES["python"]["good"], **{"core.py": "from other.billing.adapters import x\n"})
+        self.assertEqual(check_layers.violations(self.build(files), "app.billing"), [])
+        self.assertEqual(self.check("python", CASES["python"]["good"]), [])
+
     def test_cli(self):
         root = self.build(CASES["python"]["good"])
         with redirect_stdout(io.StringIO()) as out:
