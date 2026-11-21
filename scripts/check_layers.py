@@ -175,9 +175,13 @@ def is_outer(kind: str, target: str, name: str, outer: tuple) -> bool:
         if target.startswith(".."):            # escapes the subsystem: not one of its layers
             return False
         return bool(segs) and (segs[0] in outer_l or os.path.splitext(segs[0])[0] in outer_l)
-    name_l = name.lower()
-    for i in range(len(segs) - 1):
-        if segs[i] == name_l and (segs[i + 1] in outer_l or os.path.splitext(segs[i + 1])[0] in outer_l):
+    # The name is split like the import, so a dotted or qualified --name
+    # (app.billing, crate::billing) matches as a run of whole segments.
+    name_segs = _segments(name)
+    n = len(name_segs)
+    for i in range(len(segs) - n):
+        layer = segs[i + n]
+        if segs[i:i + n] == name_segs and (layer in outer_l or os.path.splitext(layer)[0] in outer_l):
             return True
     return False
 
@@ -316,8 +320,9 @@ def violations(root, name=None, inner=("model", "core", "ports"), outer=("adapte
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("root", type=Path, help="the subsystem's directory")
-    ap.add_argument("--name", help="the subsystem's name as it appears in absolute imports "
-                                   "(default: the directory name)")
+    ap.add_argument("--name", help="the subsystem's name as it appears in absolute imports, bare or "
+                                   "qualified (billing, app.billing, crate::billing; default: the "
+                                   "directory name)")
     ap.add_argument("--inner", nargs="+", default=["model", "core", "ports"],
                     help="inner layers: file stems or top-level directories")
     ap.add_argument("--outer", nargs="+", default=["adapters", "service"],
