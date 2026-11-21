@@ -147,6 +147,8 @@ report.
   encode the same rule in the repo's own suite with the language's native tool (see
   `references/layouts.md`), so CI keeps enforcing it. It fails if an inner layer imports an outer
   one, or if a port or adapter file declares more than one top-level type.
+  Prove each check can fail: plant one bad include and one second type in a copy, and see
+  both reported. A checker that cannot see a violation passes it.
 - **Frozen assertions:** during the move, tests may change their imports and wiring, but not what
   they assert. Diff the old and new assertions. The test count may only go up.
 - **Full suite:** run it with the same command as the baseline. The pass count must be at or above
